@@ -1,12 +1,20 @@
 # SPHEREx Explorer
 
+<p align="center">
+  <img src="https://img.shields.io/badge/Next.js-16.4.2-000000?style=for-the-badge&amp;logo=nextdotjs&amp;logoColor=white" alt="Next.js 16.4.2" />
+  <img src="https://img.shields.io/badge/React-19.3-61DAFB?style=for-the-badge&amp;logo=react&amp;logoColor=black" alt="React 19.3" />
+  <img src="https://img.shields.io/badge/TypeScript-5-3178C6?style=for-the-badge&amp;logo=typescript&amp;logoColor=white" alt="TypeScript 5" />
+  <img src="https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&amp;logo=fastapi&amp;logoColor=white" alt="FastAPI" />
+  <img src="https://img.shields.io/badge/Astropy-FF7E00?style=for-the-badge&amp;logo=python&amp;logoColor=white" alt="Astropy" />
+  <img src="https://img.shields.io/badge/NumPy-013243?style=for-the-badge&amp;logo=numpy&amp;logoColor=white" alt="NumPy" />
+  <img src="https://img.shields.io/badge/Google_Gemini_SDK-8E75B2?style=for-the-badge&amp;logo=googlegemini&amp;logoColor=white" alt="Google Gemini SDK" />
+</p>
+
 ### Explore the infrared sky. Compare observations. Follow the evidence.
 
 SPHEREx Explorer is an independent NASA Space Apps Challenge project that turns genuine public SPHEREx observations into an interactive scientific workspace. It brings FITS image inspection, observation comparison, detector-quality screening, spectral exploration, and a Gemini research assistant into one application.
 
 The application focuses on a curated set of astronomical targets with traceable archive products. Its purpose is to make the data understandable while keeping scientific limitations visible.
-
-**Built with Next.js, React, TypeScript, FastAPI, Astropy, NumPy, and Google's Gemini SDK.**
 
 ---
 
@@ -20,7 +28,6 @@ The application focuses on a curated set of astronomical targets with traceable 
 - [Project structure](#project-structure)
 - [Run locally](#run-locally)
 - [Environment configuration](#environment-configuration)
-- [Data packaging and cache](#data-packaging-and-cache)
 - [Verification](#verification)
 - [API overview](#api-overview)
 - [Troubleshooting](#troubleshooting)
@@ -236,34 +243,6 @@ Open **<http://localhost:3000>**. There is no root `package.json`; run npm comma
 | `SPHEREX_MIN_COMPARISON_OVERLAP` | Backend, optional | Minimum usable overlap; default `0.5`. Preserve the scientific safeguard unless deliberately reviewing its policy. |
 
 Never commit real `.env` files or put the Gemini key in frontend variables. `NEXT_PUBLIC_API_URL` is not used. Local backend configuration comes from `backend/.env`; in production, configure variables in Render.
-
-## Data packaging and cache
-
-The deployment bundle contains **38 gzip-compressed genuine FITS products**, approximately **141 MiB**, with a SHA-256 manifest. Compression preserves the original FITS bytes. Three historical retrieval failures remain documented; no placeholder science images are created.
-
-| Path | Purpose | Include in Git? |
-| --- | --- | --- |
-| `backend/data/demo/` | Required product catalog and photometry | **Yes** |
-| `backend/data/deployment_fits/` | Reproducible baseline FITS files and manifest | **Yes, including all `.fits.gz` files** |
-| `backend/data/cache/` | Writable decompressed/runtime FITS cache | No |
-| `backend/.env`, `frontend/.env.local` | Local configuration and credentials | No |
-| `.venv/`, `node_modules/`, `.next/`, `.pytest_cache/` | Local dependencies and generated output | No |
-
-From `backend/`, restore the bundled products with:
-
-```bash
-python scripts/deployment_data.py restore
-```
-
-Restoration verifies content hashes and refuses to overwrite conflicting cached files. It does not query the archive.
-
-Only when intentionally updating the genuine catalog/cache, rebuild the deployment bundle with:
-
-```bash
-python scripts/deployment_data.py pack
-```
-
-Review the resulting manifest and commit the updated bundle with the corresponding catalog. Do not run packaging as a substitute for scientific validation or remove failed-product records to make a target appear ready.
 
 ## Verification
 
