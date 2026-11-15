@@ -1,0 +1,35 @@
+# Backend-only Git repository: use as-is.
+# Monorepo Blueprint: add rootDir: backend under this service and select
+# backend/render.yaml as the Blueprint path. Dashboard commands run in backend/.
+services:
+  - type: web
+    name: spherex-explorer-api
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt && python scripts/deployment_data.py restore
+    startCommand: python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1
+    healthCheckPath: /api/health
+    buildFilter:
+      paths:
+        - app/**
+        - data/demo/**
+        - data/deployment_fits/**
+        - scripts/deployment_data.py
+        - requirements.txt
+        - .python-version
+        - render.yaml
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: MPLBACKEND
+        value: Agg
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: OMP_NUM_THREADS
+        value: "1"
+      - key: OPENBLAS_NUM_THREADS
+        value: "1"
+      - key: GEMINI_MODEL
+        value: gemini-3.1-flash-lite
+      - key: GEMINI_API_KEY
+        sync: false

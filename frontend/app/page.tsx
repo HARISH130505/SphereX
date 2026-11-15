@@ -1,0 +1,44 @@
+"use client";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
+import { WorkspaceMetric } from "@/components/layout/WorkspaceHeader";
+import { SkyMap } from "@/components/sky/SkyMap";
+import { fetchHealth, fetchTargets } from "@/lib/api";
+import { TargetInfo } from "@/lib/types";
+import { selectTarget } from "@/lib/selected-target";
+import { Activity, ArrowRight, ArrowUpRight, BookOpen, Compass, Layers, ShieldCheck, Sparkles, Telescope, Waves } from "lucide-react";
+
+const modules = [
+  { title: "Sky Explorer", href: "/sky-explorer", icon: Telescope, label: "01 / Observe", description: "Explore genuine FITS images, celestial coordinates, and per-product pixel quality." },
+  { title: "Epoch Comparison", href: "/epoch-comparison", icon: Layers, label: "02 / Compare", description: "Align compatible observations. Inspect differences and variance-aware significance maps." },
+  { title: "Candidate Investigator", href: "/candidate-investigator", icon: Activity, label: "03 / Investigate", description: "Review detector flags, screening decisions, and the limitations behind each observation." },
+  { title: "Spectral Explorer", href: "/spectral-explorer", icon: Waves, label: "04 / Measure", description: "Explore available cataloged spectrophotometry by wavelength and detector band." },
+  { title: "Research Assistant", href: "/research-assistant", icon: Sparkles, label: "05 / Understand", description: "Ask Gemini about selected targets, available observations, and scientific concepts." },
+  { title: "Mission & Project", href: "/about", icon: BookOpen, label: "06 / Learn", description: "Meet the NASA mission, understand this project, and follow the original data sources." },
+];
+
+export default function HomeDashboard() {
+  const [status, setStatus] = useState("CONNECTING");
+  const [targets, setTargets] = useState<TargetInfo[]>([]);
+  const [selected, setSelected] = useState("M101");
+  useEffect(() => {
+    fetchHealth().then(() => setStatus("ONLINE")).catch(() => setStatus("OFFLINE"));
+    fetchTargets().then(setTargets).catch(() => setStatus("OFFLINE"));
+  }, []);
+  const active = targets.find(t => t.name === selected);
+  const ready = targets.filter(t => t.exploration_status === 'READY FOR EXPLORATION');
+  return <div className="flex min-h-screen flex-col"><Navbar />
+    <main className="mx-auto w-full max-w-7xl flex-1 space-y-9 p-4 lg:space-y-12 lg:p-8">
+      {status === 'OFFLINE' && <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-rose-500/30 bg-rose-500/5 p-4 text-sm text-rose-200">Observation services could not be reached.<button onClick={() => window.location.reload()} className="rounded-lg border border-rose-400/30 px-3 py-1.5 text-xs">Reconnect</button></div>}
+      <section className="relative overflow-hidden rounded-2xl border border-cyan-400/20 bg-gradient-to-br from-cyan-950/40 via-slate-950 to-indigo-950/30 p-6 sm:p-10 lg:p-12">
+        <div aria-hidden="true" className="pointer-events-none absolute -right-20 -top-24 h-[460px] w-[460px] rounded-full border border-cyan-400/10"><div className="absolute inset-14 rounded-full border border-cyan-400/10" /><div className="absolute inset-28 rounded-full border border-cyan-400/10" /><div className="absolute inset-40 rounded-full border border-cyan-400/10" /></div>
+        <div className="relative max-w-3xl"><div className="mb-6 flex flex-wrap items-center gap-4"><span className="text-[10px] font-semibold uppercase tracking-[.25em] text-cyan-400">Your infrared observatory</span><span className={`rounded-full border px-2.5 py-1 text-[9px] tracking-wider ${status==='ONLINE'?'border-emerald-400/20 bg-emerald-400/5 text-emerald-300':'border-slate-700 text-slate-400'}`}>API · {status}</span></div><h1 className="text-4xl font-semibold leading-tight tracking-tight text-slate-100 sm:text-5xl lg:text-6xl">Real observations.<br /><span className="text-cyan-300">New perspectives.</span></h1><p className="mt-6 max-w-xl text-sm leading-7 text-slate-400 sm:text-base sm:leading-8">Step into NASA&apos;s SPHEREx data. Explore the infrared sky, compare observations, and follow the evidence behind every scientific question.</p><div className="mt-8 flex flex-wrap gap-3"><Link onClick={() => selectTarget('M101')} href="/sky-explorer?target=M101" className="inline-flex items-center gap-3 rounded-xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300">Start with M101 <ArrowRight className="h-4 w-4" /></Link><Link href="/about" className="inline-flex items-center gap-3 rounded-xl border border-slate-700 px-5 py-3 text-sm text-slate-300 hover:border-cyan-400/40">About the mission <ArrowUpRight className="h-4 w-4" /></Link></div></div>
+      </section>
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4"><WorkspaceMetric label="Predefined targets" value={targets.length || '—'} detail="Curated public observation catalog" /><WorkspaceMetric label="Ready to explore" value={targets.length ? ready.length : '—'} detail="Validated demonstration targets" /><WorkspaceMetric label="Cataloged products" value={targets.length ? targets.reduce((sum,t)=>sum+t.observation_count,0) : '—'} detail="Individual observation products" /><WorkspaceMetric label="Science approach" value="Evidence first" detail="FITS · WCS · variance · detector flags" /></div>
+      <section className="space-y-5"><div className="flex flex-wrap items-end justify-between gap-3"><div><p className="text-[10px] font-semibold uppercase tracking-[.2em] text-cyan-400">Choose your next step</p><h2 className="mt-2 text-2xl font-medium tracking-tight text-slate-100">A workspace for discovery.</h2></div><span className="text-xs text-slate-500">Observe → Compare → Investigate</span></div><div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">{modules.map(({title,href,icon:Icon,label,description})=><Link key={href} href={href} className="glass-panel group flex flex-col p-6 transition hover:border-cyan-400/40 hover:bg-cyan-400/[.03]"><div className="mb-6 flex items-center justify-between"><Icon className="h-5 w-5 text-cyan-400" /><span className="text-[10px] text-slate-500">{label}</span></div><h3 className="text-lg font-medium text-slate-100">{title}</h3><p className="mt-2 flex-1 text-xs leading-6 text-slate-400">{description}</p><div className="mt-5 flex items-center gap-2 text-xs text-cyan-300">Open workspace <ArrowRight className="h-3.5 w-3.5 transition group-hover:translate-x-1" /></div></Link>)}</div></section>
+      <section className="glass-panel space-y-5 p-5 sm:p-7"><div className="flex items-center gap-3"><Compass className="h-5 w-5 text-cyan-400" /><div><h2 className="text-xl font-medium text-slate-100">Find your place in the sky.</h2><p className="mt-1 text-xs text-slate-500">Catalog positions in ICRS. This map is not a survey coverage map.</p></div></div><div className="flex flex-wrap gap-2">{targets.map(t=><button key={t.id} onClick={()=>setSelected(t.name)} aria-pressed={selected===t.name} className={`rounded-lg border px-3 py-2 text-xs transition ${selected===t.name?'border-cyan-400/60 bg-cyan-400/10 text-cyan-200':'border-slate-800 bg-slate-900/50 text-slate-400 hover:border-slate-600'}`}>{t.name}</button>)}</div><SkyMap targets={targets} selectedTarget={selected} onSelectTarget={setSelected} />{active && <div className="flex flex-wrap items-start justify-between gap-4 rounded-xl border border-slate-800 bg-slate-900/40 p-5"><div className="max-w-2xl"><h3 className="text-sm font-semibold text-slate-200">{active.name} <span className="ml-2 text-xs font-normal text-slate-500">{active.category}</span></h3><p className="mt-2 text-xs leading-6 text-slate-400">{active.description}</p><p className="mt-3 font-mono text-[10px] text-slate-500">RA {active.ra.toFixed(4)}° · Dec {active.dec.toFixed(4)}° · {active.observation_count} products</p><p className={`mt-2 text-[10px] ${active.exploration_status==='READY FOR EXPLORATION'?'text-emerald-300':'text-amber-300'}`}>{active.exploration_status}</p></div><Link onClick={()=>selectTarget(active.name)} href={`/sky-explorer?target=${encodeURIComponent(active.name)}`} className="inline-flex items-center gap-2 text-xs text-cyan-300">Explore {active.name}<ArrowRight className="h-3.5 w-3.5" /></Link></div>}</section>
+      <div className="flex items-start gap-3 rounded-xl border border-slate-800 bg-slate-900/20 p-5"><ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-cyan-400" /><p className="text-xs leading-6 text-slate-400">Real archive products. Explicit quality limits. Traceable evidence. A visual residual or an AI explanation is a starting point for investigation, not a confirmed discovery.</p></div>
+    </main><Footer /></div>;
+}

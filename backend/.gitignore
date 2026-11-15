@@ -1,0 +1,27 @@
+# Local Python environments, caches and build output
+.venv/
+.demo-venv/
+.uv-cache/
+.pytest_cache/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Credentials: configure real values in Render, not Git.
+.env
+.env.*
+!.env.example
+
+# Runtime data stays local; exact catalog FITS bundles are deployment assets.
+data/cache/
+data/raw/
+*.fits
+*.fits.gz
+!data/deployment_fits/*.fits.gz
+
+.vscode/
+.idea/
+.DS_Store
+*.log
