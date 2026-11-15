@@ -20,7 +20,6 @@ The application focuses on a curated set of astronomical targets with traceable 
 - [Project structure](#project-structure)
 - [Run locally](#run-locally)
 - [Environment configuration](#environment-configuration)
-- [Deploy to Render and Vercel](#deploy-to-render-and-vercel)
 - [Data packaging and cache](#data-packaging-and-cache)
 - [Verification](#verification)
 - [API overview](#api-overview)
@@ -238,69 +237,6 @@ Open **<http://localhost:3000>**. There is no root `package.json`; run npm comma
 
 Never commit real `.env` files or put the Gemini key in frontend variables. `NEXT_PUBLIC_API_URL` is not used. Local backend configuration comes from `backend/.env`; in production, configure variables in Render.
 
-## Deploy to Render and Vercel
-
-### Repository layout
-
-For a repository containing this root README and both applications, deploy with service roots `backend` and `frontend`. If each application is published as a separate repository, its own repository root is `.` instead.
-
-Make sure the backend repository includes the required catalog **and** the entire `data/deployment_fits` directory. A frontend-only repository cannot deploy the Python service or supply its scientific data.
-
-### 1. Deploy the backend to Render
-
-Create a **Python Web Service** with these settings:
-
-| Setting | Value |
-| --- | --- |
-| Root Directory | `backend` for the combined repository; `.` for a backend-only repository |
-| Python | 3.12, selected by `.python-version` |
-| Build Command | `pip install -r requirements.txt && python scripts/deployment_data.py restore` |
-| Start Command | `python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1` |
-| Health Check Path | `/api/health` |
-
-Set these environment variables in Render:
-
-```dotenv
-ENVIRONMENT=production
-GEMINI_API_KEY=your_api_key_here
-GEMINI_MODEL=gemini-3.1-flash-lite
-MPLBACKEND=Agg
-PYTHONUNBUFFERED=1
-OMP_NUM_THREADS=1
-OPENBLAS_NUM_THREADS=1
-```
-
-Do not use `--reload` on Render. Render supplies `$PORT`; the process binds to `0.0.0.0` as described in its [FastAPI deployment guide](https://render.com/docs/deploy-fastapi).
-
-`backend/render.yaml` provides a Blueprint for a **backend-only repository**. For a combined repository, add `rootDir: backend` to its service definition and select `backend/render.yaml` as the Blueprint file, or use the dashboard settings above.
-
-The Blueprint selects a free instance. Account for cold starts and resource limits during demonstrations. Free services do not support persistent disks; see [Render's free-service limitations](https://render.com/docs/free). Additional archive downloads can be lost when the runtime filesystem resets; the bundled baseline products are restored during each build.
-
-### 2. Deploy the frontend to Vercel
-
-| Setting | Value |
-| --- | --- |
-| Root Directory | `frontend` for the combined repository; `.` for a frontend-only repository |
-| Framework | Next.js |
-| Node.js | `24.x` |
-| Install Command | `npm ci` |
-| Build Command | `npm run build` |
-| Environment Variable | `SPHEREX_BACKEND_URL=https://your-api.onrender.com` |
-
-Use your actual Render origin. The frontend build rejects missing, localhost, non-HTTPS, or path-containing backend URLs on Vercel. Redeploy the frontend after changing this variable because the API rewrite is configured during the build.
-
-No backend files, FITS data, Python packages, or Gemini secrets belong in the Vercel application. See [Vercel's monorepo deployment guide](https://vercel.com/docs/monorepos) for selecting a project root.
-
-### Deployment smoke check
-
-After both deployments are live:
-
-1. Check the Render service's `/api/health` endpoint.
-2. Check `/api/health` through the Vercel domain to confirm the proxy works.
-3. Load genuine M101 and M51 images in Sky Explorer.
-4. Run a compatible comparison and export a dossier.
-5. Ask the Research Assistant a target-specific question and confirm a live Gemini answer.
-
 ## Data packaging and cache
 
 The deployment bundle contains **38 gzip-compressed genuine FITS products**, approximately **141 MiB**, with a SHA-256 manifest. Compression preserves the original FITS bytes. Three historical retrieval failures remain documented; no placeholder science images are created.
@@ -350,16 +286,6 @@ npm run lint
 npm run build
 ```
 
-### Cold-cache deployment check
-
-Run from `backend/`:
-
-```bash
-python scripts/verify_deployment.py
-```
-
-This restores bundled data into a temporary empty cache, disables archive requests, and checks genuine FITS rendering, valid comparisons, significance maps, and evidence reports for M101, M51, M33, and NGC 253. It also checks the seven-target catalog and M101's 370 photometry samples.
-
 Additional scripts:
 
 | Script, relative to `backend/` | Purpose |
@@ -367,8 +293,6 @@ Additional scripts:
 | `scripts/validate_dataset.py` | Check required screening-catalog columns. |
 | `scripts/verify_exploration_runtime.py` | Exercise the running local frontend proxy, FITS rendering, comparisons, and evidence reports. Requires both servers. |
 | `scripts/verify_gemini_runtime.py` | Make a direct live Gemini request and test the local backend and frontend-proxy endpoints. Requires both servers, network access, and a configured key. |
-
-**Most recent recorded local checks:** 154 backend tests passed; a frontend-only clean install, Vercel-mode production build, and lint passed; four-target cold-cache science checks passed. These checks do not establish successful deployment on your hosting accounts or replace a visual browser review.
 
 ## API overview
 
