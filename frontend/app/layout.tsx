@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "SPHEREx Explorer — NASA Space Apps Challenge 2026 | Planet X & Multi-Epoch Observatory",
+  title: "SPHEREx Explorer",
   description: "Explore NASA SPHEREx all-sky infrared spectrophotometry, inspect cross-epoch difference imaging, vet moving solar system candidates, and analyze 102-band calibrated SED spectra.",
 };
 
