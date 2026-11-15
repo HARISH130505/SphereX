@@ -1,4 +1,4 @@
-# SPHEREx Explorer
+# SPHEREx Explorer - The Infrared Workspace
 
 <p align="center">
   <img src="https://img.shields.io/badge/Next.js-16.4.2-000000?style=for-the-badge&amp;logo=nextdotjs&amp;logoColor=white" alt="Next.js 16.4.2" />
